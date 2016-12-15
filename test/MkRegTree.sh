@@ -10,4 +10,4 @@ echo "PYTHONPATH", $PYTHONPATH
 cd ${batchdir}
 echo $PWD
 python ${workdir}/MkRegTree.py
-eos cp TrainingTree_BulkGravTohhTohbbhbb_narrow.root /eos/cms/store/user/devdatta/B2GEDMNTuples/CMSSW_8_0_X_V2_AK8Reg/TrainingTree_BulkGravTohhTohbbhbb_narrow.root
+eos cp TrainingTree_BGToHH4b_narrow_B2GAnaFW_v80x_v2p2.root /eos/cms/store/user/devdatta/B2GEDMNTuples/CMSSW_8_0_X_V2_AK8Reg/TrainingTree_BGToHH4b_narrow_B2GAnaFW_v80x_v2p2.root
