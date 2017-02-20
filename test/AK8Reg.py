@@ -22,7 +22,7 @@ def getfiles(input_dir):
 
 def main():
 
-  fout = ROOT.TFile("AK8Regressed.root", "RECREATE")
+  fout = ROOT.TFile("AK8Regressed_B2GAnaFW_v80x_v2p2.root", "RECREATE")
   factory = ROOT.TMVA.Factory("TMVARegression", fout,
       "!V:!Silent:!Color:!DrawProgressBar:Transformations=I:AnalysisType=Regression")
   factory.AddVariable("pt_AK8MatchedToHbb", "pt_AK8MatchedToHbb", "GeV", "F")
@@ -39,9 +39,11 @@ def main():
   factory.AddTarget("pt_MatchedHbb/pt_AK8MatchedToHbb")
   #factory.SetWeightExpression("n_pv")
   factory.AddSpectator("n_pv")
-  factory.AddSpectator("msoftdrop_AK8MatchedToHbb")
+  ###factory.AddSpectator("msoftdrop_AK8MatchedToHbb")
+  factory.AddSpectator("msdPuppi_AK8MatchedToHbb")
   
-  fin = ROOT.TFile.Open("TrainingTree_BulkGravTohhTohbbhbb_narrow.root")  
+  ##fin = ROOT.TFile.Open("TrainingTree_BulkGravTohhTohbbhbb_narrow.root")  
+  fin = ROOT.TFile.Open("TrainingTree_BGToHH4b_narrow_B2GAnaFW_v80x_v2p2.root")  
   traintree = fin.Get("TrainingTree")
   testtree = fin.Get("TrainingTree")
   factory.AddRegressionTree(traintree, 1.0, ROOT.TMVA.Types.kTraining)
@@ -49,7 +51,7 @@ def main():
 
   cut = ROOT.TCut()
 
-  factory.PrepareTrainingAndTestTree( cut, "V:nTrain_Regression=100000:nTest_Regression=100000:SplitMode=Random:SplitSeed=0:NormMode=NumEvents" );
+  factory.PrepareTrainingAndTestTree( cut, "V:nTrain_Regression=10000:nTest_Regression=10000:SplitMode=Random:SplitSeed=0:NormMode=NumEvents" );
   factory.BookMethod( ROOT.TMVA.Types.kBDT, "BDTG",
                                    "!H:V:NTrees=2000:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:GradBaggingFraction=0.7:nCuts=20:MaxDepth=3:NNodesMax=15" );
   factory.TrainAllMethods()
