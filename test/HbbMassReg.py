@@ -12,7 +12,7 @@ import ROOT
 
 def train():
 
-  fout = ROOT.TFile("HbbRegressed_DiPho_GenJetsWithNu_No_reco_Mjj_and_pT_Cut_dR_p3_matching.root", "RECREATE")
+  fout = ROOT.TFile("HbbRegressed_AllBkg.root", "RECREATE")
   factory = ROOT.TMVA.Factory("TMVARegression", fout,
       "!V:!Silent:!Color:!DrawProgressBar:Transformations=I:AnalysisType=Regression")
 
@@ -36,16 +36,16 @@ def train():
 
   dataloader.AddRegressionTarget("mbbNu/reg_reco_mjj")
 
-  #fin = ROOT.TFile.Open("/afs/cern.ch/work/l/lata/public/ForDevdatta/Regression/2017/root_files_dR_p3_matching/node_SM_2017.root", "READ")
-  fin = ROOT.TFile.Open("/afs/cern.ch/work/l/lata/public/ForDevdatta/Regression/2017/root_files_dR_p3_matching/DiPho_2017.root", "READ")
+  fin = ROOT.TFile.Open("/afs/cern.ch/work/l/lata/public/ForDevdatta/Regression/2017/root_files_dR_p3_matching/root_files_with_Pho_variables/DiPho_normalized.root", "READ")
   traintree = fin.Get("myRegTree")
   testtree = fin.Get("myRegTree")
   dataloader.AddRegressionTree(traintree, 1.0, ROOT.TMVA.Types.kTraining)
   dataloader.AddRegressionTree(testtree, 1.0, ROOT.TMVA.Types.kTesting)
 
-  cut = ROOT.TCut("dRmin_Jet1<0.2 && dRmin_Jet2 < 0.2")
+  cut = "dRmin_Jet1<0.4 && dRmin_Jet2 < 0.4 && reg_reco_mjj<200."
+  tcut = ROOT.TCut(cut)
 
-  dataloader.PrepareTrainingAndTestTree( cut, "V:nTrain_Regression=10000:nTest_Regression=9000:SplitMode=Random:SplitSeed=0:NormMode=NumEvents" );
+  dataloader.PrepareTrainingAndTestTree( tcut, "V:nTrain_Regression=0:nTest_Regression=0:SplitMode=Random:SplitSeed=0:NormMode=NumEvents" );
   factory.BookMethod( dataloader,  ROOT.TMVA.Types.kBDT, "BDTG",
       "!H:!V:NTrees=100::BoostType=Grad:Shrinkage=0.1:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=20:MaxDepth=3:MaxDepth=4" );
   factory.TrainAllMethods()
@@ -76,8 +76,7 @@ def test(verbose=False):
   mbb                = np.empty(1, dtype='float32')  
   mbbNu              = np.empty(1, dtype='float32')  
 
-  #fin = ROOT.TFile.Open("/afs/cern.ch/work/l/lata/public/ForDevdatta/Regression/2017/root_files_dR_p3_matching/DiPho_2017.root", "READ")
-  fin = ROOT.TFile.Open("/afs/cern.ch/work/l/lata/public/ForDevdatta/Regression/2017/root_files_dR_p3_matching/node_SM_2017.root", "READ")
+  fin = ROOT.TFile.Open("/afs/cern.ch/work/l/lata/public/ForDevdatta/Regression/2017/root_files_dR_p3_matching/root_files_with_Pho_variables/node_SM_2017.root", "READ")
   tree = fin.Get('myRegTree')
 
   tree.SetBranchAddress("reg_recoJet_1_pt"    , reg_recoJet_1_pt   )
@@ -106,8 +105,7 @@ def test(verbose=False):
   h_mjjres         = ROOT.TH1D('h_mjjres'      , ';(m_{jj}^{Reco} - m_{jj})^{Gen}/m_{jj}^{Gen}', 50, -2, 2)
 
   methodname = "BDTG"
-  #weightfile = "/afs/cern.ch/user/d/devdatta/afswork/CMSREL/Analysis/CMSSW_9_4_13_patch2/src/Analysis/HiggsTagging/test/dataset/weights/TMVARegression_On_node_SM_2017_No_reco_Mjj_and_pT_Cut_dR_p3_matching_BDTG.weights.xml"
-  weightfile = "/afs/cern.ch/user/d/devdatta/afswork/CMSREL/Analysis/CMSSW_9_4_13_patch2/src/Analysis/HiggsTagging/test/dataset/weights/TMVARegression_On_DiPho_2017_No_reco_Mjj_and_pT_Cut_dR_p3_matching_jetEnergy_BDTG.weights.xml"
+  weightfile = "/afs/cern.ch/user/d/devdatta/afswork/CMSREL/Analysis/CMSSW_9_4_13_patch2/src/Analysis/HiggsTagging/test/dataset/weights/TMVARegression_BDTG_AllBkg.weights.xml"
 
   ROOT.TMVA.Tools.Instance()
   reader = ROOT.TMVA.Reader( "!Color:Silent" );
@@ -140,15 +138,15 @@ def test(verbose=False):
     if verbose: 
       print("ievt = {0} reco_mjj = {1} reg = {2} reco_mjj_reg = {3}".format(ievt, reg_reco_mjj[0], reg, reg_reco_mjj[0]*reg))
 
-    #if reg_reco_mjj[0] < 98 or reg_reco_mjj[0] > 143:
-    h_reco_mjj.Fill(reg_reco_mjj[0])
-    h_reco_mjj_reg.Fill(reg_reco_mjj[0]*reg)
-    h_regwt.Fill(reg)
-    h_mjjres_reg.Fill( (reg_reco_mjj[0]*reg - mbbNu)/mbbNu )
-    h_mjjres.Fill( (reg_reco_mjj[0] - mbbNu)/mbbNu )
+    if reg_reco_mjj[0] < 200.:
+      h_reco_mjj.Fill(reg_reco_mjj[0])
+      h_reco_mjj_reg.Fill(reg_reco_mjj[0]*reg)
+      h_regwt.Fill(reg)
+      h_mjjres_reg.Fill( (reg_reco_mjj[0]*reg - mbbNu)/mbbNu )
+      h_mjjres.Fill( (reg_reco_mjj[0] - mbbNu)/mbbNu )
 
-    if verbose:
-      print('reg wt = {}'.format(reg))
+      if verbose:
+        print('reg wt = {}'.format(reg))
 
   fout.Write()
   fout.Close()
